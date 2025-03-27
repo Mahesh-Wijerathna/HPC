@@ -12,3 +12,7 @@ https://hpc-tutorials.llnl.gov/posix/example_code/join.c
 
 compile code for this only
 gcc -o a_4_Joining_and_Detaching a_4_Joining_and_Detaching.c -lm -pthread
+
+# Stack Management
+https://hpc-tutorials.llnl.gov/posix/stack_management/
+segmentation fault when no correct management
