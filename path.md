@@ -1,1 +1,1 @@
-d ../../mnt/g/7_SEM/HPC/
+cd ../../mnt/g/7_SEM/HPC/
