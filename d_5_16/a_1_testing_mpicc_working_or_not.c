@@ -19,3 +19,20 @@ char **argv;
 
 //  to run
 //  ./a_1
+
+// ┌──(mahesh㉿MAHESH-LAP)-[/mnt/g/7_SEM/HPC/d_5_16]
+// └─$ ./a_1
+// Hello World ! I am process 0 of 1
+
+
+// to run with 2 processes
+//  mpirun -np 2 a_1.out
+//  mpiexec -np 2 a_1.out
+//  srun -n 48 a_1.out
+// 48 was not enough, so I used 2
+
+// ┌──(mahesh㉿MAHESH-LAP)-[/mnt/g/7_SEM/HPC/d_5_16]
+// └─$ mpirun -np 2 a_1
+// Hello World ! I am process 1 of 2
+// Hello World ! I am process 0 of 2
+
