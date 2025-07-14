@@ -2,7 +2,6 @@
 #include <string.h>
 #include <openssl/sha.h>
 #include <time.h>
-#include <omp.h>
 
 #define HASH_LEN 65
 
@@ -61,19 +60,9 @@ int main() {
     clock_gettime(CLOCK_MONOTONIC, &start_time);
 
     for (int len = 1; len <= max_length && !found; len++) {
-        printf("Trying passwords of length %d...\n", len);
-
-        
-        #pragma omp parallel for shared(found)
-        for (int i = 0; i < charset_size; i++) {
-            if (found) continue;
-
-            char buffer[len + 1];
-            buffer[0] = charset[i];
-            buffer[1] = '\0';
-
-            generate_combinations(buffer, 1, len, target_hash, &found);
-        }
+        char buffer[len + 1];
+        buffer[0] = '\0';
+        generate_combinations(buffer, 0, len, target_hash, &found);
     }
 
     clock_gettime(CLOCK_MONOTONIC, &end_time);
@@ -87,3 +76,10 @@ int main() {
 
     return 0;
 }
+
+
+// ┌──(mahesh㉿MAHESH-LAP)-[/mnt/g/7_SEM/HPC/project_v4]
+// └─$ gcc -o pc1 pc1_serial.c -lcrypto
+
+// ┌──(mahesh㉿MAHESH-LAP)-[/mnt/g/7_SEM/HPC/project_v4]
+// └─$ ./pc1

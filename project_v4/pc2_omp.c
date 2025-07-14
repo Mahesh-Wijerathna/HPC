@@ -87,3 +87,11 @@ int main() {
 
     return 0;
 }
+
+
+
+// ┌──(mahesh㉿MAHESH-LAP)-[/mnt/g/7_SEM/HPC/project_v4]
+// └─$ gcc -fopenmp -o pc2 pc2_omp.c -lcrypto
+
+// ┌──(mahesh㉿MAHESH-LAP)-[/mnt/g/7_SEM/HPC/project_v4]
+// └─$ ./pc2
