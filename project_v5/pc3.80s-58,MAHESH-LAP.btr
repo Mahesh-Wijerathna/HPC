@@ -1,0 +1,15 @@
+
+pc3:58 terminated with signal 11 at PC=7f430d464f00 SP=7ffeec0a7798.  Backtrace:
+/lib/x86_64-linux-gnu/libc.so.6(+0x164f00) [0x7f430d464f00]
+/lib/x86_64-linux-gnu/libopen-pal.so.80(opal_convertor_pack+0x18b) [0x7f430cd230db]
+/lib/x86_64-linux-gnu/libopen-pal.so.80(mca_btl_sm_sendi+0x500) [0x7f430cdade20]
+/lib/x86_64-linux-gnu/libmpi.so.40(+0x282c55) [0x7f430d778c55]
+/lib/x86_64-linux-gnu/libmpi.so.40(mca_pml_ob1_send+0x4ce) [0x7f430d77aafe]
+/lib/x86_64-linux-gnu/libmpi.so.40(ompi_coll_base_reduce_generic+0xf86) [0x7f430d604306]
+/lib/x86_64-linux-gnu/libmpi.so.40(ompi_coll_base_reduce_intra_binary+0xcb) [0x7f430d60535b]
+/lib/x86_64-linux-gnu/libmpi.so.40(ompi_coll_tuned_reduce_intra_dec_fixed+0x53) [0x7f430d62d883]
+/lib/x86_64-linux-gnu/libmpi.so.40(MPI_Reduce+0x1ae) [0x7f430d5c5e6e]
+./pc3(+0x1698) [0x55f9d5155698]
+/lib/x86_64-linux-gnu/libc.so.6(+0x29d68) [0x7f430d329d68]
+/lib/x86_64-linux-gnu/libc.so.6(__libc_start_main+0x85) [0x7f430d329e25]
+./pc3(+0x1171) [0x55f9d5155171]

@@ -6,7 +6,10 @@
 
 #define HASH_LEN 65
 
+// const char charset[] = "0123456789"
+// const char charset[] = "abcdefghijklmnopqrstuvwxyz0123456789";
 const char charset[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+// const char charset[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!@#$%^&*0123456789";
 const int charset_size = sizeof(charset) - 1;
 
 void sha256_hash(const char *str, char output[HASH_LEN]) {

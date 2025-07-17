@@ -2,15 +2,16 @@
 #include <string.h>
 #include <openssl/sha.h>
 #include <time.h>
-#include <omp.h>
 
+// === Global Definitions ===
 #define HASH_LEN 65
 
-// const char charset[] = "0123456789"
-// const char charset[] = "abcdefghijklmnopqrstuvwxyz0123456789";
 const char charset[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-// const char charset[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!@#$%^&*0123456789";
 const int charset_size = sizeof(charset) - 1;
+
+int found = 0;
+int max_length = 4;
+// ==========================
 
 void sha256_hash(const char *str, char output[HASH_LEN]) {
     unsigned char hash[SHA256_DIGEST_LENGTH];
@@ -18,31 +19,6 @@ void sha256_hash(const char *str, char output[HASH_LEN]) {
     for (int i = 0; i < SHA256_DIGEST_LENGTH; i++)
         sprintf(output + (i * 2), "%02x", hash[i]);
     output[64] = '\0';
-}
-
-void try_password(const char *candidate, const char *target_hash, int *found_flag) {
-    char hash[HASH_LEN];
-    sha256_hash(candidate, hash);
-
-    if (strcmp(hash, target_hash) == 0) {
-        printf("Found password: %s\n", candidate);
-        *found_flag = 1;
-    }
-}
-
-void generate_combinations(char *prefix, int depth, int max_length, const char *target_hash, int *found_flag) {
-    if (*found_flag) return;
-
-    if (depth == max_length) {
-        try_password(prefix, target_hash, found_flag);
-        return;
-    }
-
-    for (int i = 0; i < charset_size && !*found_flag; i++) {
-        prefix[depth] = charset[i];
-        prefix[depth + 1] = '\0';
-        generate_combinations(prefix, depth + 1, max_length, target_hash, found_flag);
-    }
 }
 
 double time_diff_in_seconds(struct timespec start, struct timespec end) {
@@ -57,25 +33,32 @@ int main() {
         return 1;
     }
 
-    int found = 0;
-    int max_length = 4;
-
     struct timespec start_time, end_time;
     clock_gettime(CLOCK_MONOTONIC, &start_time);
 
     for (int len = 1; len <= max_length && !found; len++) {
-        printf("Trying passwords of length %d...\n", len);
+        unsigned long total = 1;
+        for (int i = 0; i < len; i++)
+            total *= charset_size;
 
-        
-        #pragma omp parallel for shared(found)
-        for (int i = 0; i < charset_size; i++) {
-            if (found) continue;
+        for (unsigned long n = 0; n < total && !found; n++) {
+            char candidate[len + 1];
+            unsigned long temp = n;
 
-            char buffer[len + 1];
-            buffer[0] = charset[i];
-            buffer[1] = '\0';
+            for (int pos = len - 1; pos >= 0; pos--) {
+                candidate[pos] = charset[temp % charset_size];
+                temp /= charset_size;
+            }
+            candidate[len] = '\0';
 
-            generate_combinations(buffer, 1, len, target_hash, &found);
+            char hash[HASH_LEN];
+            sha256_hash(candidate, hash);
+
+            if (strcmp(hash, target_hash) == 0) {
+                printf("Found password: %s\n", candidate);
+                found = 1;
+                break;
+            }
         }
     }
 
@@ -92,9 +75,8 @@ int main() {
 }
 
 
+// ┌──(mahesh㉿MAHESH-LAP)-[/mnt/g/7_SEM/HPC/project_v4]
+// └─$ gcc -o pc1 pc1_serial.c -lcrypto
 
 // ┌──(mahesh㉿MAHESH-LAP)-[/mnt/g/7_SEM/HPC/project_v4]
-// └─$ gcc -fopenmp -o pc2 pc2_omp.c -lcrypto
-
-// ┌──(mahesh㉿MAHESH-LAP)-[/mnt/g/7_SEM/HPC/project_v4]
-// └─$ ./pc2
+// └─$ ./pc1

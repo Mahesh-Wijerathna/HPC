@@ -5,10 +5,8 @@
 #include <mpi.h>
 
 #define HASH_LEN 65
-// const char charset[] = "0123456789"
-// const char charset[] = "abcdefghijklmnopqrstuvwxyz0123456789";
+
 const char charset[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-// const char charset[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!@#$%^&*0123456789";
 const int charset_size = sizeof(charset) - 1;
 
 void sha256_hash(const char *str, char output[HASH_LEN]) {
@@ -25,11 +23,12 @@ double time_diff_in_seconds(struct timespec start, struct timespec end) {
 
 int main(int argc, char *argv[]) {
     int rank, size;
-    MPI_Init(&argc, &argv);
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-    MPI_Comm_size(MPI_COMM_WORLD, &size);
+    MPI_Init(&argc, &argv);                 // Start MPI
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);   // Get current process ID
+    MPI_Comm_size(MPI_COMM_WORLD, &size);   // Get total number of processes
 
     char target_hash[HASH_LEN];
+
     if (rank == 0) {
         printf("Enter the SHA-256 hash to crack (64 hex characters): ");
         if (scanf("%64s", target_hash) != 1) {
@@ -38,26 +37,24 @@ int main(int argc, char *argv[]) {
         }
     }
 
+    // Broadcast hash from rank 0 to all processes
     MPI_Bcast(target_hash, HASH_LEN, MPI_CHAR, 0, MPI_COMM_WORLD);
 
-    int found = 0;
-    int global_found = 0;
     int max_length = 4;
+    int found = 0;
+    char found_password[10] = "";
 
     struct timespec start_time, end_time;
     if (rank == 0)
         clock_gettime(CLOCK_MONOTONIC, &start_time);
 
-    for (int len = 1; len <= max_length && !global_found; len++) {
-        if (rank == 0)
-            printf("Trying passwords of length %d...\n", len);
-
-        // total combinations = charset_size ^ len
+    for (int len = 1; len <= max_length && !found; len++) {
         unsigned long total = 1;
         for (int i = 0; i < len; i++)
             total *= charset_size;
 
-        for (unsigned long n = rank; n < total && !global_found; n += size) {
+        // Each process takes a chunk
+        for (unsigned long n = rank; n < total; n += size) {
             char candidate[len + 1];
             unsigned long temp = n;
 
@@ -71,33 +68,45 @@ int main(int argc, char *argv[]) {
             sha256_hash(candidate, hash);
 
             if (strcmp(hash, target_hash) == 0) {
-                printf("[Process %d] Found password: %s\n", rank, candidate);
                 found = 1;
+                strncpy(found_password, candidate, sizeof(found_password) - 1);
                 break;
             }
         }
 
-        // Communicate if any process found the password
+        // Check if any process found the password
+        int global_found = 0;
         MPI_Allreduce(&found, &global_found, 1, MPI_INT, MPI_LOR, MPI_COMM_WORLD);
+        found = global_found;
+
+        if (found) break;
     }
 
-    if (rank == 0) {
-        clock_gettime(CLOCK_MONOTONIC, &end_time);
+    // Gather and print result
+    if (found) {
+        char final_password[10];
+        MPI_Reduce(rank == 0 ? found_password : NULL, final_password, 10, MPI_CHAR, MPI_MAX, 0, MPI_COMM_WORLD);
 
-        if (!global_found)
+        if (rank == 0) {
+            clock_gettime(CLOCK_MONOTONIC, &end_time);
+            printf("Found password: %s\n", found_password);
+            printf("Time taken: %.6f seconds\n", time_diff_in_seconds(start_time, end_time));
+        }
+    } else {
+        if (rank == 0) {
+            clock_gettime(CLOCK_MONOTONIC, &end_time);
             printf("Password not found up to length %d.\n", max_length);
-
-        double elapsed = time_diff_in_seconds(start_time, end_time);
-        printf("Time taken: %.6f seconds\n", elapsed);
+            printf("Time taken: %.6f seconds\n", time_diff_in_seconds(start_time, end_time));
+        }
     }
 
-    MPI_Finalize();
+    MPI_Finalize(); // End MPI
     return 0;
 }
 
 
 // ┌──(mahesh㉿MAHESH-LAP)-[/mnt/g/7_SEM/HPC/project_v4]
-// └─$ gcc -o pc1 pc1_serial.c -lcrypto
+// └─$ mpicc pc3_mpi.c -o pc3 -lcrypto
 
 // ┌──(mahesh㉿MAHESH-LAP)-[/mnt/g/7_SEM/HPC/project_v4]
-// └─$ ./pc1
+// └─$ mpirun -np 2 ./pc3
